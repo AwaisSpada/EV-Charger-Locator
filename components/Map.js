@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents,useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { useEffect } from 'react';
 
@@ -9,6 +9,13 @@ const currentLocationIcon = new L.Icon({
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
+});
+// Car icon for driving mode
+const carIcon = new L.Icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png', // car icon
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 const stationIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -28,16 +35,17 @@ function MapAutoPan({ userLocation }) {
   return null;
 }
 
-export default function Map({ userLocation, stations, onLocationSelect }) {
+export default function Map({ userLocation, stations, onLocationSelect, selectedStation, route, onStationSelect, drivingMode }) {
   function LocationMarker() {
     useMapEvents({
       click(e) {
         onLocationSelect([e.latlng.lat, e.latlng.lng]);
       },
     });
-    return userLocation === null ? null : (
-      <Marker position={userLocation} icon={currentLocationIcon}>
-        <Popup>Your current location</Popup>
+    if (userLocation === null) return null;
+    return (
+      <Marker position={userLocation} icon={drivingMode ? carIcon : currentLocationIcon}>
+        <Popup>{drivingMode ? 'You (Driving Mode)' : 'Your current location'}</Popup>
       </Marker>
     );
   }
@@ -61,10 +69,20 @@ export default function Map({ userLocation, stations, onLocationSelect }) {
         />
         <LocationMarker />
         {stations.map((station, idx) => (
-          <Marker key={idx} position={[station.lat, station.lon]} icon={stationIcon}>
-            <Popup>{station.name}</Popup>
+          <Marker
+            key={idx}
+            position={[station.lat, station.lon]}
+            icon={selectedStation && selectedStation.lat === station.lat && selectedStation.lon === station.lon ? currentLocationIcon : stationIcon}
+            eventHandlers={{ click: () => onStationSelect && onStationSelect(station) }}
+          >
+            <Popup>
+              <div style={{ fontWeight: 600 }}>{station.name}</div>
+              <div>Lat: {station.lat}, Lon: {station.lon}</div>
+              {station.distance && <div>Distance: {(station.distance / 1000).toFixed(2)} km</div>}
+            </Popup>
           </Marker>
         ))}
+        {route && <Polyline positions={route} color="#3182ce" weight={5} opacity={0.7} />}
       </MapContainer>
     </div>
   );

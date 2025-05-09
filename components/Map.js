@@ -10,7 +10,6 @@ const currentLocationIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
-// Car icon for driving mode
 const carIcon = new L.Icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png', // car icon
   iconSize: [32, 32],
@@ -35,7 +34,7 @@ function MapAutoPan({ userLocation }) {
   return null;
 }
 
-export default function Map({ userLocation, stations, onLocationSelect, selectedStation, route, onStationSelect, drivingMode }) {
+export default function Map({ userLocation, stations, onLocationSelect, selectedStation, route, onStationSelect, stationDrivingModes }) {
   function LocationMarker() {
     useMapEvents({
       click(e) {
@@ -43,9 +42,11 @@ export default function Map({ userLocation, stations, onLocationSelect, selected
       },
     });
     if (userLocation === null) return null;
+    // Show carIcon if ANY driving mode is on, else show currentLocationIcon
+    const anyDriving = stationDrivingModes && Object.values(stationDrivingModes).some(Boolean);
     return (
-      <Marker position={userLocation} icon={drivingMode ? carIcon : currentLocationIcon}>
-        <Popup>{drivingMode ? 'You (Driving Mode)' : 'Your current location'}</Popup>
+      <Marker position={userLocation} icon={anyDriving ? carIcon : currentLocationIcon}>
+        <Popup>{anyDriving ? 'You (Driving Mode)' : 'Your current location'}</Popup>
       </Marker>
     );
   }

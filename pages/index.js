@@ -10,44 +10,48 @@ export default function Home() {
   const [stations, setStations] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedStation, setSelectedStation] = useState(null);
+  const [stationDrivingModes, setStationDrivingModes] = useState({});
   const [route, setRoute] = useState(null);
-  const [drivingMode, setDrivingMode] = useState(false);
   const [routeDistance, setRouteDistance] = useState(null);
+  const [error, setError] = useState("");
   const watchIdRef = useRef(null);
 
+  // Get user's location once on mount (for initial load)
   useEffect(() => {
-    if (drivingMode) {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+        err => setError('Failed to get initial location')
+      );
+    }
+  }, []);
+
+  // Enable geolocation watch if ANY card is in driving mode
+  useEffect(() => {
+    const anyDriving = Object.values(stationDrivingModes).some(Boolean);
+    if (anyDriving) {
       if ('geolocation' in navigator) {
         watchIdRef.current = navigator.geolocation.watchPosition(
           pos => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-          err => console.error(err),
-          { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+          err => setError('Failed to get location'),
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
         );
       }
-    } else {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-        });
-      }
+    } else if (watchIdRef.current !== null && watchIdRef.current !== undefined) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
     }
     return () => {
-      if (watchIdRef.current !== null) {
+      if (watchIdRef.current !== null && watchIdRef.current !== undefined) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
     };
-  }, [drivingMode]);
+  }, [stationDrivingModes]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    setError("");
     if (!search) return;
     setLoading(true);
     try {
@@ -67,11 +71,9 @@ export default function Home() {
           parseFloat(resp.data[0].lon)
         ]);
         setSelectedStation(null)
-      } else {
-        setError("Location not found");
       }
     } catch (err) {
-      setError("Failed to search location");
+      
     }
     setLoading(false);
   };
@@ -84,7 +86,6 @@ export default function Home() {
     }
   }, [userLocation]);
 
-  // Fetch route when selectedStation changes
   useEffect(() => {
     const fetchRoute = async () => {
       if (userLocation && selectedStation) {
@@ -94,7 +95,7 @@ export default function Home() {
           const data = await res.json();
           if (data.routes && data.routes[0]) {
             setRoute(data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]));
-            setRouteDistance(data.routes[0].distance); // meters
+            setRouteDistance(data.routes[0].distance);
           } else {
             setRoute(null);
             setRouteDistance(null);
@@ -111,7 +112,6 @@ export default function Home() {
     fetchRoute();
   }, [userLocation, selectedStation]);
 
-  // Calculate distances for each station
   const stationsWithDistance = userLocation && stations.length > 0
     ? stations.map(station => {
         const distance = getDistance(
@@ -144,17 +144,7 @@ export default function Home() {
         alignItems: 'flex-start',
         flexWrap: 'wrap',
       }}>
-        {/* Map Column */}
         <div style={{ flex: 2, minWidth: 340, maxWidth: 700 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-            <button
-              onClick={() => setDrivingMode(dm => !dm)}
-              style={{ padding: '8px 18px', borderRadius: 6, background: drivingMode ? '#38a169' : '#cbd5e0', color: drivingMode ? '#fff' : '#2d3748', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 15 }}
-              aria-pressed={drivingMode}
-            >
-              {drivingMode ? 'Driving Mode: ON' : 'Driving Mode: OFF'}
-            </button>
-          </div>
           <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }} aria-label="Search for a location">
             <label htmlFor="location-search" style={{ fontWeight: 500, color: '#2d3748' }}>Location:</label>
             <input
@@ -170,7 +160,6 @@ export default function Home() {
               {loading ? <span>Searching...</span> : <span>Search</span>}
             </button>
           </form>
-          {error && <div role="alert" style={{ color: '#e53e3e', marginBottom: 8, fontWeight: 500 }}>{error}</div>}
           <div style={{ marginBottom: 12, color: '#4a5568', fontSize: 15 }}>
             <span>Tip: You can also click on the map to select a location.</span>
           </div>
@@ -180,7 +169,7 @@ export default function Home() {
             )}
           </div>
           <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0', minHeight: 350 }}>
-            <Map userLocation={userLocation} stations={stationsWithDistance} onLocationSelect={setUserLocation} selectedStation={selectedStation} route={route} onStationSelect={setSelectedStation} drivingMode={drivingMode} />
+            <Map userLocation={userLocation} stations={stationsWithDistance} onLocationSelect={setUserLocation} selectedStation={selectedStation} route={route} onStationSelect={setSelectedStation} stationDrivingModes={stationDrivingModes} />
           </div>
           <div style={{ marginTop: 10, display: 'flex', gap: 16, alignItems: 'center', fontSize: 14, color: '#4a5568' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -210,16 +199,78 @@ export default function Home() {
           <div style={{ fontWeight: 600, fontSize: 20, color: '#2d3748', marginBottom: 12, textAlign: 'center' }}>Charging Stations</div>
           {stationsWithDistance.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {stationsWithDistance.map((station, idx) => (
-                <div key={idx} style={{ background: selectedStation === station ? '#ebf8ff' : '#fff', border: '1px solid #cbd5e0', borderRadius: 10, padding: 16, boxShadow: selectedStation === station ? '0 2px 8px #3182ce33' : '0 1px 4px #0001', cursor: 'pointer', transition: 'box-shadow .2s' }} onClick={() => setSelectedStation(station)}>
-                  <div style={{ fontWeight: 600, fontSize: 18, color: '#2d3748' }}>{station.name}</div>
-                  <div style={{ color: '#4a5568', fontSize: 15, margin: '4px 0 0 0' }}>Lat: {station.lat}, Lon: {station.lon}</div>
-                  <div style={{ color: '#3182ce', fontSize: 15, marginTop: 4 }}>Distance: {(station.distance / 1000).toFixed(2)} km</div>
-                  {selectedStation === station && route && (
-                    <div style={{ color: '#38a169', marginTop: 6 }}>Route is shown on the map</div>
-                  )}
-                </div>
-              ))}
+              {(() => {
+                let recommendedStation = null;
+                let stationsSorted = [...stationsWithDistance].sort((a, b) => a.distance - b.distance);
+                recommendedStation = stationsSorted.find(s => (s.amenities && s.amenities.length > 0)) || stationsSorted[0];
+                return stationsSorted.map((station, idx) => (
+                  <div key={idx} style={{ background: selectedStation === station ? '#ebf8ff' : '#fff', border: '1px solid #cbd5e0', borderRadius: 10, padding: 16, boxShadow: selectedStation === station ? '0 2px 8px #3182ce33' : '0 1px 4px #0001', cursor: 'pointer', transition: 'box-shadow .2s', position: 'relative' }} onClick={() => setSelectedStation(station)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontWeight: 600, fontSize: 18, color: '#2d3748' }}>{station.name}</div>
+                      {recommendedStation === station && station === recommendedStation && (
+                        <span style={{ background: '#ffb703', color: '#fff', fontWeight: 700, fontSize: 13, borderRadius: 6, padding: '2px 8px', marginLeft: 4 }}>Recommended</span>
+                      )}
+                    </div>
+                    <div style={{ color: '#4a5568', fontSize: 15, margin: '4px 0 0 0' }}>Lat: {station.lat}, Lon: {station.lon}</div>
+                    <div style={{ color: '#3182ce', fontSize: 15, marginTop: 4 }}>Distance: {(station.distance / 1000).toFixed(2)} km</div>
+                    <div style={{ color: '#4a5568', fontSize: 14, marginTop: 4 }}>
+                      {station.amenities && station.amenities.length > 0 ? (
+                        <>
+                          <span style={{ color: '#38a169', fontWeight: 500 }}>Amenities: </span>
+                          {station.amenities.join(', ')}
+                        </>
+                      ) : (
+                        <span style={{ color: '#a0aec0' }}>No amenities info</span>
+                      )}
+                    </div>
+                    <div style={{ color: '#805ad5', fontSize: 13, marginTop: 2 }}>
+                      {station.connections !== undefined ? `${station.connections} charging point${station.connections === 1 ? '' : 's'}` : ''}
+                    </div>
+                    {selectedStation === station && route && (
+                      <div style={{ color: '#38a169', marginTop: 6 }}>Route is shown on the map</div>
+                    )}
+                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center' }}>
+                      {(() => {
+                        const stationKey = station.id || `${station.name}_${station.lat}_${station.lon}`;
+                        const isDriving = !!stationDrivingModes[stationKey];
+                        return (
+                          <>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                setStationDrivingModes(() => {
+                                  const newModes = {};
+                                  newModes[stationKey] = !isDriving;
+                                  return newModes;
+                                });
+                                if (!isDriving) {
+                                  setSelectedStation(station);
+                                } else if (selectedStation && (selectedStation.id ? selectedStation.id === station.id : selectedStation.name === station.name && selectedStation.lat === station.lat && selectedStation.lon === station.lon)) {
+                                  setSelectedStation(null);
+                                  setRoute(null);
+                                  setRouteDistance(null);
+                                }
+                              }}
+                              style={{
+                                padding: '7px 18px',
+                                borderRadius: 6,
+                                background: isDriving ? '#e53e3e' : '#38a169',
+                                color: '#fff',
+                                border: 'none',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                fontSize: 15
+                              }}
+                            >
+                              {isDriving ? 'End Driving Mode' : 'Start Driving Mode'}
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           ) : (
             <div style={{ color: '#a0aec0', textAlign: 'center', marginTop: 32 }}>No charging stations found.</div>

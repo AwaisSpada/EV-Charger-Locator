@@ -3,7 +3,7 @@ import axios from 'axios';
 export default async function handler(req, res) {
   const { lat, lon } = req.query;
   const radius = 10;
-  const apiKey = process.env.OPENCHARGEMAP_API_KEY || 'YOUR_OPENCHARGEMAP_API_KEY';
+  const apiKey = process.env.OPENCHARGEMAP_API_KEY;
 
   if (!lat || !lon) {
     return res.status(400).json({ error: 'Missing latitude or longitude.' });
@@ -18,10 +18,21 @@ export default async function handler(req, res) {
     if (!Array.isArray(response.data)) {
       return res.status(502).json({ error: 'Unexpected response from Open Charge Map.' });
     }
+    console.log('response', response)
     const stations = response.data.map(station => ({
       name: station.AddressInfo?.Title || 'Unknown',
       lat: station.AddressInfo?.Latitude,
       lon: station.AddressInfo?.Longitude,
+      address: station.AddressInfo?.AddressLine1 || '',
+      distance: station.AddressInfo?.Distance,
+      connections: Array.isArray(station.Connections) ? station.Connections.length : 0,
+      amenities: [
+        station.AddressInfo?.RelatedURL?.toLowerCase().includes('coffee') ? 'Coffee Shop' : null,
+        station.AddressInfo?.RelatedURL?.toLowerCase().includes('tuckshop') ? 'Tuckshop' : null,
+        station.AddressInfo?.RelatedURL?.toLowerCase().includes('restaurant') ? 'Restaurant' : null,
+        // Add more amenity checks here as needed
+      ].filter(Boolean),
+      relatedUrl: station.AddressInfo?.RelatedURL || '',
     })).filter(s => s.lat && s.lon);
     res.status(200).json({ stations });
   } catch (error) {

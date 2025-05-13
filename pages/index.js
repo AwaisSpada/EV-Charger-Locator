@@ -318,16 +318,24 @@ export default function Home() {
   return (
     <main className={`ev-finder-app ${showAnimation ? 'app-entry' : ''}`}>
       <style jsx global>{`
+       html, body, #__next {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    url('/images/ev.jpg') center center/cover no-repeat;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
         .ev-finder-app {
-          min-height: 100vh;
-          background: #f6f7fb;
+          min-height: 100%;
+          width: 100%;
+          background: none;
+          position: relative;
           transition: opacity 0.8s ease;
+          font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
         }
-        
-        .app-entry {
-          opacity: 0;
-          transform: translateY(10px);
-        }
+        .main-hero {
         
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -414,6 +422,7 @@ export default function Home() {
       
       <header className="header-container" style={{
         background: "#fff",
+        opacity: 0.9,
         boxShadow: "0 2px 16px rgba(0, 0, 0, 0.08)",
         padding: "0.5rem",
         textAlign: "center",
@@ -422,10 +431,11 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 1120, margin: "auto", position: "relative", zIndex: 2 }}>
           <h1 style={{
-            fontSize: "2.25rem",
+            fontSize: "2rem",
             fontWeight: 700,
             color: "#222a35",
-            marginBottom: 4,
+            marginBottom: 2,
+            marginTop: 2,
             display: "flex",
             alignItems: "center",
             justifyContent: "center"
@@ -454,7 +464,7 @@ export default function Home() {
           </h1>
           <p style={{ 
             color: "#6b7280", 
-            fontSize: "1.125rem", 
+            fontSize: "1rem", 
             maxWidth: 600, 
             margin: "0 auto",
             animationDelay: "0.2s",
@@ -510,6 +520,7 @@ export default function Home() {
         maxWidth: 1200,
         margin: '2rem auto',
         background: '#fff',
+        opacity: 0.9,
         borderRadius: 16,
         boxShadow: '0 2px 24px rgba(0, 0, 0, 0.1)',
         padding: 24,
@@ -738,7 +749,8 @@ export default function Home() {
           minWidth: 280, 
           maxWidth: 400, 
           height: 600, 
-          overflowY: 'auto', 
+          overflowY: 'auto',
+          scrollbarWidth: 'none', 
           background: '#f7fafc', 
           borderRadius: 12, 
           border: '1px solid #e2e8f0', 
@@ -1115,6 +1127,7 @@ export default function Home() {
           alignItems: 'center',
           gap: 8,
           background: '#fff',
+          opacity: 0.9,
           padding: '8px 16px',
           borderRadius: 20,
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
@@ -1132,11 +1145,10 @@ export default function Home() {
         >
           <Navigation2 size={18} style={{
             color: "#3182ce",
-            animation: "pulseSlow 2s infinite"
-          }} />
-          &copy; {new Date().getFullYear()} EV Charging Finder
-        </div>
-      </footer>
-    </main>
-  );
+        animation: "pulseSlow 2s infinite"
+      }} />
+      &copy; {new Date().getFullYear()} EV Charging Finder
+    </div>
+  </footer>
+</main>  );
 }

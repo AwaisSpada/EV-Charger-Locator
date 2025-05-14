@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline, Circle } from 'react-leaflet';
+import NorthCompass from './NorthCompass';
 import L from 'leaflet';
 import { useEffect } from 'react';
 
@@ -60,7 +61,13 @@ export default function Map({ userLocation, stations, onLocationSelect, selected
 
   return (
     <div style={{ width: '100%', minHeight: 400, position: 'relative', marginBottom: 10 }} aria-label="Map showing your location and nearby charging stations">
-      <MapContainer center={userLocation || [51.505, -0.09]} zoom={13} style={{ height: '60vh', minHeight: 350, width: '100%' }}>
+      <NorthCompass />
+      <MapContainer
+        center={userLocation || [51.505, -0.09]}
+        zoom={13}
+        style={{ height: '70vh', minHeight: 350, width: '100%' }}
+        scrollWheelZoom={true}
+      >
         <MapAutoPan userLocation={userLocation} />
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
@@ -74,6 +81,11 @@ export default function Map({ userLocation, stations, onLocationSelect, selected
             icon={selectedStation && selectedStation.lat === station.lat && selectedStation.lon === station.lon ? currentLocationIcon : stationIcon}
             eventHandlers={{ click: () => onStationSelect && onStationSelect(station) }}
           >
+            <Circle
+              center={[station.lat, station.lon]}
+              radius={3000} 
+              pathOptions={{ color: 'lightblue', fillColor: '#add8e6', fillOpacity: 0.2 }}
+            />
             <Popup>
               <div style={{ fontWeight: 600 }}>{station.name}</div>
               <div>Lat: {station.lat}, Lon: {station.lon}</div>

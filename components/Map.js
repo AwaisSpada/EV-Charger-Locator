@@ -91,13 +91,8 @@ function MapAutoPan({ userLocation }) {
 async function fetchWeather(lat, lon) {
   try {
     const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric`;
-    console.log('Fetching weather from:', apiUrl);
-    
     const response = await fetch(apiUrl);
     const data = await response.json();
-    
-    console.log('Weather API response:', data);
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

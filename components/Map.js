@@ -3,7 +3,6 @@ import NorthCompass from './NorthCompass';
 import L from 'leaflet';
 import { useEffect, useState } from 'react';
 
-// WeatherInfo component to display weather data
 const WeatherInfo = ({ weatherData, title, compact = false }) => {
   if (!weatherData) return <div>Loading weather data...</div>;
   
@@ -103,7 +102,6 @@ async function fetchWeather(lat, lon) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // Return all weather data
     return {
       temp: data.main?.temp,
       feels_like: data.main?.feels_like,
@@ -130,7 +128,6 @@ async function fetchWeather(lat, lon) {
 export default function Map({ userLocation, stations, onLocationSelect, selectedStation, route, onStationSelect, activeStationId }) {
   const [weatherData, setWeatherData] = useState({});
 
-  // Fetch weather for user location
   useEffect(() => {
     if (userLocation) {
       fetchWeather(userLocation[0], userLocation[1])
@@ -143,7 +140,6 @@ export default function Map({ userLocation, stations, onLocationSelect, selected
     }
   }, [userLocation]);
   
-  // Fetch weather for stations
   useEffect(() => {
     if (stations && stations.length > 0) {
       stations.forEach(station => {
@@ -183,7 +179,6 @@ export default function Map({ userLocation, stations, onLocationSelect, selected
       </Marker>
     );
   }
-console.log('weatherData', weatherData)
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -204,7 +199,6 @@ console.log('weatherData', weatherData)
       >
         <MapAutoPan userLocation={userLocation} />
         <TileLayer
-          // attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <LocationMarker />

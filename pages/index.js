@@ -88,7 +88,6 @@ export default function Home() {
           { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
         );
         
-        // Fallback for devices with inconsistent watchPosition
         locationIntervalRef.current = setInterval(() => {
           navigator.geolocation.getCurrentPosition(
             pos => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
@@ -445,10 +444,7 @@ export default function Home() {
               display: "flex", 
               alignItems: "center", 
               justifyContent: "center",
-              // background: "linear-gradient(135deg, #3b82f6, #2563eb)",
               borderRadius: "50%",
-              // padding: 10,
-              // boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
               width: 52,
               height: 52
             }}>

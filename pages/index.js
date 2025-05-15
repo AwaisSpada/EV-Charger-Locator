@@ -1311,7 +1311,8 @@ export default function Home() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          color: "#a0aec0",
+          color: "#4a5568",
+          background: "rgba(255,255,255,0.15)",
           fontSize: 14,
           padding: "2rem 0 1.5rem 0",
           gap: 10,
@@ -1325,11 +1326,14 @@ export default function Home() {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: "#fff",
+            background: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            boxShadow: "0 2px 16px rgba(49,130,206,0.06)",
+            borderBottom: "1px solid rgba(226,232,240,0.25)",
             opacity: 0.9,
             padding: "8px 16px",
             borderRadius: 20,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
             transition: "all 0.3s ease",
           }}
           className="footer-brand"
@@ -1345,7 +1349,7 @@ export default function Home() {
           <Navigation2
             size={18}
             style={{
-              color: "#3182ce",
+              color: "#2563eb",
               animation: "pulseSlow 2s infinite",
             }}
           />
